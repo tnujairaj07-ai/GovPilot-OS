@@ -2143,7 +2143,7 @@ function KpiTab({ data }: { data: DashboardData }) {
           {filteredRows.map(({ pilot, district, k }) => {
             const achievement = kpiAchievement(k);
             const scorePct = typeof achievement === "number" ? Math.round(achievement) : null;
-            const isVerified = verifiedSet.has(k.id) || (k.snapshots && k.snapshots.length > 0);
+            const isVerified = verifiedSet.has(k.id) || (data.snapshots && data.snapshots.some((s) => s.kpi_id === k.id && s.verified));
 
             return (
               <div

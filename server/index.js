@@ -46,6 +46,10 @@ console.log('  startup@innovate.ai / password123 (Startup)');
 console.log('  expert@university.edu / password123 (Expert)');
 console.log('  admin@govpilot.gov / password123 (Admin)');
 
-app.listen(PORT, () => {
-  console.log(`GovPilot OS running on http://localhost:${PORT}`);
-});
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`GovPilot OS running on http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;

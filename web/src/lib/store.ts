@@ -998,16 +998,16 @@ export function createScaleDecision(input: {
   pilot_id: string;
   decision: ScaleDecisionType;
   reasoning: string;
-  next_steps: string;
-  budget_allocated: number;
-  timeline_months: number;
-  districts: string[];
-  units: string;
-  population_covered: number;
-  gem_category: string;
-  gem_category_code: string;
+  next_steps?: string;
+  budget_allocated?: number;
+  timeline_months?: number;
+  districts?: string[];
+  units?: string;
+  population_covered?: number;
+  gem_category?: string;
+  gem_category_code?: string;
   gem_mode?: ScaleDecision["gem"]["mode"];
-  startup_runway_exemption: boolean;
+  startup_runway_exemption?: boolean;
 }): ScaleDecision | null {
   const pilot = db.pilots.find((p) => p.id === input.pilot_id);
   if (!pilot) return null;
@@ -1020,21 +1020,21 @@ export function createScaleDecision(input: {
     challenge_id: pilot.challenge_id,
     decision: input.decision,
     reasoning: input.reasoning,
-    next_steps: input.next_steps,
-    budget_allocated: input.budget_allocated,
-    timeline_months: input.timeline_months,
+    next_steps: input.next_steps ?? "Initiate scale-up procurement",
+    budget_allocated: input.budget_allocated ?? pilot.budget_allocated,
+    timeline_months: input.timeline_months ?? 12,
     scale_scope: {
-      districts: input.districts,
-      units: input.units,
-      population_covered: input.population_covered,
+      districts: input.districts ?? [pilot.district || "Statewide"],
+      units: input.units ?? "Districts / Municipal Corporations",
+      population_covered: input.population_covered ?? 500000,
     },
     gem: {
-      category: input.gem_category,
-      category_code: input.gem_category_code,
+      category: input.gem_category ?? "Civic Tech & Public Works",
+      category_code: input.gem_category_code ?? "GeM/STARTUP-RUNWAY/MSINS",
       stage: input.decision === "gem_procurement" ? "category_mapped" : "not_started",
       mode: input.gem_mode,
-      contract_value: input.decision === "gem_procurement" ? input.budget_allocated : undefined,
-      startup_runway_exemption: input.startup_runway_exemption,
+      contract_value: input.decision === "gem_procurement" ? (input.budget_allocated ?? pilot.budget_allocated) : undefined,
+      startup_runway_exemption: input.startup_runway_exemption ?? true,
     },
     approvals: [
       {
@@ -1072,7 +1072,7 @@ export function createScaleDecision(input: {
     "recorded_scale_decision",
     "scale_decision",
     decision.id,
-    `${input.decision.replace(/_/g, " ")} — ₹${input.budget_allocated.toLocaleString("en-IN")}`,
+    `${input.decision.replace(/_/g, " ")} — ₹${decision.budget_allocated.toLocaleString("en-IN")}`,
   );
   return decision;
 }

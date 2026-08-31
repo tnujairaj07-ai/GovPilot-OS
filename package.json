@@ -3,10 +3,14 @@
   "version": "1.0.0",
   "description": "GovPilot OS - Digital platform for government-startup innovation pilots",
   "main": "server/index.js",
+  "workspaces": [
+    "web"
+  ],
   "scripts": {
     "dev": "concurrently -n \"BACKEND,FRONTEND\" -c \"blue.bold,green.bold\" \"node server/index.js\" \"npm run dev --prefix web\"",
     "dev:server": "node server/index.js",
     "dev:web": "npm run dev --prefix web",
+    "postinstall": "npm install --prefix web",
     "build": "npm run build --prefix web",
     "start": "node server/index.js",
     "init-db": "node server/db/init.js"
