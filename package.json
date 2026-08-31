@@ -11,8 +11,9 @@
     "dev:server": "node server/index.js",
     "dev:web": "npm run dev --prefix web",
     "postinstall": "npm install --prefix web",
-    "build": "npm run build --prefix web",
-    "start": "node server/index.js",
+    "build": "npm install --prefix web && npm run build --prefix web",
+    "start": "npm start --prefix web",
+    "start:server": "node server/index.js",
     "init-db": "node server/db/init.js"
   },
   "dependencies": {
