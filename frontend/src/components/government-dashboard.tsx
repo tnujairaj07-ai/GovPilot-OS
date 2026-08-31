@@ -345,21 +345,6 @@ function OverviewTab({
     return list.length > 0 ? list : data.proposals;
   }, [proposalSubFilter, sectorFilter, pendingProposals, shortlistedProposals, data.proposals, challengeMap]);
 
-  // Filter challenges by sector
-  const displayedChallenges = React.useMemo(() => {
-    if (sectorFilter === "all") return data.challenges;
-    return data.challenges.filter((c) => c.sector === sectorFilter);
-  }, [data.challenges, sectorFilter]);
-
-  // Filter pilots by sector
-  const displayedPilots = React.useMemo(() => {
-    if (sectorFilter === "all") return data.pilots;
-    return data.pilots.filter((p) => {
-      const ch = challengeMap[p.challenge_id];
-      return ch?.sector === sectorFilter;
-    });
-  }, [data.pilots, sectorFilter, challengeMap]);
-
   const views = buildPilotViews(data);
   const atRisk = views.filter((v) => v.riskLevel === "high");
   const scaleReady = views.filter((v) => v.scaleReadiness === "ready");
@@ -367,7 +352,7 @@ function OverviewTab({
   return (
     <div className="space-y-4">
       {/* ===================================================================== */}
-      {/* TOP HORIZONTAL SECTOR FILTER STRIP (from reference sketch)           */}
+      {/* TOP HORIZONTAL SECTOR FILTER STRIP                                    */}
       {/* ===================================================================== */}
       <div className="flex flex-wrap items-center justify-between gap-2.5 rounded border border-slate-200 bg-white p-2.5 shadow-2xs">
         <div className="flex items-center gap-2">
@@ -403,16 +388,16 @@ function OverviewTab({
         </div>
 
         <div className="text-[11px] text-slate-500 font-medium">
-          Filter applies across all 3 lists below
+          Filter proposals by sector
         </div>
       </div>
 
-      {/* Main Grid: 2 Columns for Lists, 1 Column for Attention Required */}
+      {/* Main Grid: 2 Columns for Proposals, 1 Column for Attention Required */}
       <div className="grid gap-6 lg:grid-cols-3 items-start">
         {/* Main Left Content Stream (Cols 1-2) */}
         <div className="lg:col-span-2 space-y-6">
           {/* =================================================================== */}
-          {/* LIST 1: PROPOSALS AWAITING DECISION (SCROLLABLE WINDOW)             */}
+          {/* PROPOSALS AWAITING DECISION (SCROLLABLE 2-COLUMN WINDOW)            */}
           {/* =================================================================== */}
           <div className="space-y-2.5">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-2">
@@ -468,7 +453,7 @@ function OverviewTab({
                   No proposals found matching the selected filters.
                 </div>
               ) : (
-                <div className="max-h-[460px] overflow-y-auto pr-2 space-y-3 [scrollbar-width:thin]">
+                <div className="max-h-[520px] overflow-y-auto pr-2 space-y-3 [scrollbar-width:thin]">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     {displayedProposals.map((p) => (
                       <ProposalGridCard
@@ -493,149 +478,6 @@ function OverviewTab({
               <span className="text-[11px] text-slate-400">
                 ↕ Scroll inside window to browse all proposals
               </span>
-            </div>
-          </div>
-
-          {/* =================================================================== */}
-          {/* LIST 2: ACTIVE INNOVATION CHALLENGES (SCROLLABLE WINDOW)            */}
-          {/* =================================================================== */}
-          <div className="space-y-2.5 pt-2 border-t border-slate-200">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-              <div className="flex items-center gap-2">
-                <span className="flex h-5 w-5 items-center justify-center rounded bg-indigo-100 text-indigo-800 text-xs font-bold">
-                  🏛️
-                </span>
-                <SectionLabel>Active Innovation Challenges</SectionLabel>
-                <span className="font-mono text-xs font-bold text-slate-500">
-                  ({displayedChallenges.length})
-                </span>
-              </div>
-              <button
-                onClick={() => onOpen("challenges")}
-                className="text-xs font-bold text-blue-700 hover:underline"
-              >
-                View all challenges tab →
-              </button>
-            </div>
-
-            {/* Scrollable Window for Challenges */}
-            <div className="rounded border-2 border-slate-300 bg-slate-100/60 p-3 shadow-inner">
-              {displayedChallenges.length === 0 ? (
-                <div className="py-8 text-center text-slate-500 text-xs">
-                  No challenges found in this sector.
-                </div>
-              ) : (
-                <div className="max-h-[320px] overflow-y-auto pr-2 space-y-3 [scrollbar-width:thin]">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                    {displayedChallenges.map((c) => {
-                      const count = data.proposals.filter((p) => p.challenge_id === c.id).length;
-                      return (
-                        <div
-                          key={c.id}
-                          onClick={() => onOpen("challenges")}
-                          className="rounded border border-slate-200 bg-white p-3.5 shadow-2xs hover:shadow-md hover:border-slate-300 transition-all cursor-pointer border-t-[3px] border-t-indigo-600 flex flex-col justify-between space-y-2"
-                        >
-                          <div className="space-y-1.5">
-                            <div className="flex items-center justify-between gap-1 text-[11px]">
-                              <span className="font-mono font-bold text-indigo-700">{c.challenge_code}</span>
-                              <SectorBadge sector={c.sector} />
-                            </div>
-                            <h4 className="text-xs font-bold text-slate-900 line-clamp-1 hover:text-indigo-700">
-                              {c.title}
-                            </h4>
-                            <p className="text-[11.5px] text-slate-500 line-clamp-2 leading-relaxed">
-                              {c.problem_statement}
-                            </p>
-                          </div>
-
-                          <div className="flex items-center justify-between border-t border-slate-100 pt-2 text-[11px] text-slate-600">
-                            <span className="font-semibold text-slate-800">
-                              Budget: {formatInrCompact(c.budget_min)}–{formatInrCompact(c.budget_max)}
-                            </span>
-                            <span className="font-mono font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded">
-                              {count} proposals
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* =================================================================== */}
-          {/* LIST 3: LIVE PILOT DEPLOYMENTS (SCROLLABLE WINDOW)                  */}
-          {/* =================================================================== */}
-          <div className="space-y-2.5 pt-2 border-t border-slate-200">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-              <div className="flex items-center gap-2">
-                <span className="flex h-5 w-5 items-center justify-center rounded bg-emerald-100 text-emerald-800 text-xs font-bold">
-                  🚀
-                </span>
-                <SectionLabel>Live Pilot Deployments & Outcome Status</SectionLabel>
-                <span className="font-mono text-xs font-bold text-slate-500">
-                  ({displayedPilots.length})
-                </span>
-              </div>
-              <button
-                onClick={() => onOpen("pilots")}
-                className="text-xs font-bold text-blue-700 hover:underline"
-              >
-                Inspect all pilots tab →
-              </button>
-            </div>
-
-            {/* Scrollable Window for Pilots */}
-            <div className="rounded border-2 border-slate-300 bg-slate-100/60 p-3 shadow-inner">
-              {displayedPilots.length === 0 ? (
-                <div className="py-8 text-center text-slate-500 text-xs">
-                  No active pilots in this sector.
-                </div>
-              ) : (
-                <div className="max-h-[320px] overflow-y-auto pr-2 space-y-3 [scrollbar-width:thin]">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                    {displayedPilots.map((p) => {
-                      const ch = challengeMap[p.challenge_id];
-                      return (
-                        <div
-                          key={p.id}
-                          onClick={() => onOpen("pilots")}
-                          className="rounded border border-slate-200 bg-white p-3.5 shadow-2xs hover:shadow-md hover:border-slate-300 transition-all cursor-pointer border-l-[4px] border-l-emerald-600 flex flex-col justify-between space-y-2"
-                        >
-                          <div className="space-y-1">
-                            <div className="flex items-center justify-between gap-1 text-[11px] flex-wrap">
-                              <span className="font-mono font-bold text-emerald-800">{p.work_order_no || p.id}</span>
-                              <div className="flex items-center gap-1">
-                                {ch?.sector && <SectorBadge sector={ch.sector} />}
-                                <StatusBadge status={p.status} />
-                              </div>
-                            </div>
-                            <h4 className="text-xs font-bold text-slate-900 line-clamp-1 hover:text-emerald-700">
-                              {p.title}
-                            </h4>
-                            <div className="text-[11.5px] text-slate-500">
-                              🏛️ {p.startup_name} · {p.district || "Pune"}
-                            </div>
-                          </div>
-
-                          <div className="border-t border-slate-100 pt-2 flex items-center justify-between text-[11px]">
-                            <div>
-                              <span className="text-[10px] text-slate-400 uppercase">Spend:</span>{" "}
-                              <span className="font-mono font-bold text-slate-900">{formatInrCompact(p.budget_spent)}</span> /{" "}
-                              <span className="font-mono text-slate-600">{formatInrCompact(p.budget_allocated)}</span>
-                            </div>
-                            <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded text-[10.5px]">
-                              {p.progress_percentage || 0}% Progress
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>
