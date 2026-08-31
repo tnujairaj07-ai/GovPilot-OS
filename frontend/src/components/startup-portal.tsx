@@ -1,4 +1,4 @@
-// web/src/components/startup-portal.tsx
+// frontend/src/components/startup-portal.tsx
 "use client";
 
 import * as React from "react";

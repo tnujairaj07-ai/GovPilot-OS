@@ -1,4 +1,4 @@
-// web/src/components/government-dashboard.tsx
+// frontend/src/components/government-dashboard.tsx
 "use client";
 
 import * as React from "react";

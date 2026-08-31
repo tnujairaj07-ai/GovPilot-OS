@@ -1,5 +1,5 @@
 {
-  "name": "govpilot-os-web",
+  "name": "govpilot-os-frontend",
   "version": "0.1.0",
   "private": true,
   "scripts": {
