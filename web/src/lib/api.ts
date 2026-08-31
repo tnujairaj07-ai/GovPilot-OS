@@ -175,6 +175,28 @@ export async function updateChallenge(
   return delay(store.updateChallenge(id, patch));
 }
 
+export async function publishChallenge(
+  id: string,
+  status: "draft" | "in_review" | "open" = "open",
+): Promise<Challenge | null> {
+  return delay(store.updateChallenge(id, { status }));
+}
+
+export async function cloneChallenge(
+  id: string,
+  title?: string,
+): Promise<Challenge | null> {
+  const all = store.selectChallenges();
+  const original = all.find((c) => c.id === id);
+  if (!original) return null;
+  const cloned = store.createChallenge({
+    ...original,
+    title: title ?? `Copy of ${original.title}`,
+    status: "draft",
+  });
+  return delay(cloned);
+}
+
 export async function setProposalStatus(
   id: string,
   status: Proposal["status"],
@@ -243,6 +265,23 @@ export async function recordKpiSnapshot(input: {
 
 export async function verifySnapshot(id: string): Promise<KpiSnapshot | null> {
   return delay(store.verifySnapshot(id));
+}
+
+export async function batchProposalDecision(
+  proposalIds: string[],
+  action: "shortlist" | "reject",
+): Promise<{ updated_count: number }> {
+  for (const id of proposalIds) {
+    store.setProposalStatus(id, action === "shortlist" ? "shortlisted" : "rejected");
+  }
+  return delay({ updated_count: proposalIds.length });
+}
+
+export async function releaseMilestonePayment(
+  milestoneId: string,
+  mode: Milestone["payment_mode"] = "PFMS",
+): Promise<Milestone | null> {
+  return delay(store.releaseMilestonePayment(milestoneId, mode));
 }
 
 /* ------------------------------------------------------------------ */
@@ -404,9 +443,6 @@ export async function releasePayment(
 ): Promise<Milestone | null> {
   return delay(store.releaseMilestonePayment(id, mode));
 }
-
-/** Alias used by the government console. */
-export const releaseMilestonePayment = releasePayment;
 
 export async function generateAgreement(input: {
   pilot_id: string;

@@ -38,11 +38,51 @@ import type {
 /* State                                                               */
 /* ------------------------------------------------------------------ */
 
-let db: PlatformData = createSeedData();
+function loadDb(): PlatformData {
+  if (typeof window !== "undefined") {
+    try {
+      const cached = localStorage.getItem("govpilot_platform_db");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (
+          parsed &&
+          Array.isArray(parsed.challenges) &&
+          parsed.challenges.length >= 3 &&
+          Array.isArray(parsed.proposals) &&
+          parsed.proposals.length >= 5
+        ) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      // Fall back to seed data if storage corrupt
+    }
+  }
+  return createSeedData();
+}
+
+export function persistDb() {
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem("govpilot_platform_db", JSON.stringify(db));
+    } catch (e) {
+      // Ignore storage limit errors
+    }
+  }
+}
+
+let db: PlatformData = loadDb();
 let currentUserId: string = DEFAULT_USER_BY_ROLE.government;
 
 /** Reset the store back to the pristine seed dataset. */
 export function resetStore() {
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.removeItem("govpilot_platform_db");
+    } catch (e) {
+      // Ignore
+    }
+  }
   db = createSeedData();
 }
 
@@ -92,6 +132,7 @@ function log(action: string, entityType: string, entityId: string, details?: str
     created_at: nowIso(),
   };
   db.activity.unshift(entry);
+  persistDb();
 }
 
 /* ------------------------------------------------------------------ */

@@ -6,6 +6,7 @@ const challenges = [];
 const proposals = [];
 const evaluations = [];
 const pilots = [];
+const milestones = [];
 const kpis = [];
 const kpiSnapshots = [];
 const scaleDecisions = [];
@@ -85,6 +86,15 @@ kpiSnapshots.push(
   { id: snap1, kpi_id: kpi1, pilot_id: pilot1, reported_value: 83, reported_text: null, notes: '9 of 12 facilities online.', reported_by: govId, created_at: '2025-06-15T00:00:00Z' }
 );
 
+const m1 = uuidv4();
+const m2 = uuidv4();
+const m3 = uuidv4();
+milestones.push(
+  { id: m1, pilot_id: pilot1, seq: 1, title: 'Sensor Deployment & Baseline Ingestion', amount: 25000, due_date: '2025-05-01T00:00:00Z', status: 'paid', paid_at: '2025-05-02T10:00:00Z', kpi_links: [kpi1], created_at: '2025-04-01T00:00:00Z' },
+  { id: m2, pilot_id: pilot1, seq: 2, title: 'Automated Emissions Reporting & Analytics', amount: 25000, due_date: '2025-06-15T00:00:00Z', status: 'approved', paid_at: null, kpi_links: [kpi2], created_at: '2025-04-01T00:00:00Z' },
+  { id: m3, pilot_id: pilot1, seq: 3, title: 'Final Pilot Review & Department Handover', amount: 22000, due_date: '2025-07-21T00:00:00Z', status: 'pending', paid_at: null, kpi_links: [], created_at: '2025-04-01T00:00:00Z' }
+);
+
 function getUserById(id) {
   return users.find(u => u.id === id) || null;
 }
@@ -141,6 +151,7 @@ function getArray(table) {
     case 'proposals': return proposals;
     case 'evaluations': return evaluations;
     case 'pilots': return pilots;
+    case 'milestones': return milestones;
     case 'kpis': return kpis;
     case 'kpi_snapshots': return kpiSnapshots;
     case 'scale_decisions': return scaleDecisions;
@@ -174,6 +185,7 @@ module.exports = {
   proposals,
   evaluations,
   pilots,
+  milestones,
   kpis,
   kpiSnapshots,
   scaleDecisions,
