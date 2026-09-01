@@ -645,6 +645,34 @@ export function submitEvaluation(id: string, patch: EvaluationSubmission): Evalu
   };
 
   const enriched = enrichEvaluation(db.evaluations[idx]);
+  
+  // Recalculate proposal consensus status
+  const propId = db.evaluations[idx].proposal_id;
+  const propIdx = db.proposals.findIndex((p) => p.id === propId);
+  if (propIdx !== -1) {
+    const propEvaluations = db.evaluations.filter((e) => e.proposal_id === propId && e.status === "submitted");
+    if (propEvaluations.length > 0) {
+      const avgScore =
+        propEvaluations.reduce((acc, ev) => {
+          const wMap = weightsForProposal(propId);
+          return acc + (computeWeightedScore(ev.scores, wMap) ?? 3.5);
+        }, 0) / propEvaluations.length;
+
+      let derivedStatus: Proposal["status"] = "under_review";
+      if (avgScore >= 3.8) {
+        derivedStatus = "shortlisted";
+      } else if (avgScore < 2.8) {
+        derivedStatus = "rejected";
+      }
+
+      db.proposals[propIdx] = {
+        ...db.proposals[propIdx],
+        status: derivedStatus,
+        updated_at: nowIso(),
+      };
+    }
+  }
+
   log(
     "submitted_evaluation",
     "evaluation",
@@ -653,6 +681,7 @@ export function submitEvaluation(id: string, patch: EvaluationSubmission): Evalu
       enriched.recommendation ?? "no recommendation"
     })`,
   );
+  persistDb();
   return enriched;
 }
 

@@ -50,18 +50,33 @@ router.post('/', authenticate, authorize('expert'), (req, res) => {
     }
     
     const evals = db.getAll('evaluations').filter(e => e.proposal_id === proposal_id);
-    const avgInnovation = evals.reduce((a, e) => a + e.innovation_score, 0) / evals.length;
-    const avgFeasibility = evals.reduce((a, e) => a + e.feasibility_score, 0) / evals.length;
-    const avgImpact = evals.reduce((a, e) => a + e.impact_score, 0) / evals.length;
+    const avgInnovation = evals.reduce((a, e) => a + (e.innovation_score || 3), 0) / evals.length;
+    const avgFeasibility = evals.reduce((a, e) => a + (e.feasibility_score || 3), 0) / evals.length;
+    const avgImpact = evals.reduce((a, e) => a + (e.impact_score || 3), 0) / evals.length;
+    const compositeScore = ((avgInnovation * 0.35) + (avgFeasibility * 0.35) + (avgImpact * 0.30));
+
+    let updatedStatus = 'under_review';
+    if (compositeScore >= 3.8) {
+      updatedStatus = 'shortlisted';
+    } else if (compositeScore < 2.5) {
+      updatedStatus = 'rejected';
+    }
+
     db.update('proposals', proposal_id, {
-      innovation_score: avgInnovation,
-      feasibility_score: avgFeasibility,
-      impact_score: avgImpact,
-      overall_score: ((avgInnovation + avgFeasibility + avgImpact) / 3).toFixed(2),
+      innovation_score: parseFloat(avgInnovation.toFixed(2)),
+      feasibility_score: parseFloat(avgFeasibility.toFixed(2)),
+      impact_score: parseFloat(avgImpact.toFixed(2)),
+      overall_score: parseFloat(compositeScore.toFixed(2)),
+      status: updatedStatus,
+      updated_at: new Date().toISOString(),
     });
     
-    logActivity(req.user.id, 'submit_evaluation', 'evaluation', evalData.id, { proposal_id });
-    res.status(201).json({ id: evalData.id });
+    logActivity(req.user.id, 'submit_evaluation', 'evaluation', evalData.id, {
+      proposal_id,
+      composite_score: parseFloat(compositeScore.toFixed(2)),
+      derived_status: updatedStatus,
+    });
+    res.status(201).json({ id: evalData.id, composite_score: parseFloat(compositeScore.toFixed(2)), status: updatedStatus });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
