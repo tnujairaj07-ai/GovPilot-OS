@@ -109,11 +109,14 @@ export function GovernmentDashboard() {
   if (!data || !user || !filtered) return <Loading label="Loading Government dashboard…" />;
 
   const pendingProposals = data.proposals.filter((p) =>
-    ["submitted", "under_review"].includes(p.status),
+    ["submitted", "under_review", "draft"].includes(p.status),
   );
   const openChallenges = data.challenges.filter((c) => c.status === "open");
-  const activePilots = data.pilots.filter((p) => p.status === "active");
-  const totalBudget = data.pilots.reduce((s, p) => s + p.budget_allocated, 0);
+  const activePilots = data.pilots.filter((p) =>
+    ["active", "in_pilot", "signed"].includes(p.status),
+  );
+  const totalAllocated = data.pilots.reduce((s, p) => s + (Number(p.budget_allocated) || 0), 0);
+  const totalSpent = data.pilots.reduce((s, p) => s + (Number(p.budget_spent) || 0), 0);
 
   return (
     <div className="space-y-6">
@@ -155,13 +158,27 @@ export function GovernmentDashboard() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <StatCard label="Open challenges" value={openChallenges.length} hint="Accepting proposals" />
-        <StatCard label="Proposals in review" value={pendingProposals.length} hint="Awaiting decision" />
-        <StatCard label="Active pilots" value={activePilots.length} hint="Milestone-tracked" />
         <StatCard
-          label="Pilot spend (sanctioned)"
-          value={formatInrCompact(totalBudget)}
-          hint={`${data.pilots.length} pilots`}
+          label="Open challenges"
+          value={openChallenges.length}
+          hint={`${data.challenges.length} total challenges`}
+        />
+        <StatCard
+          label="Proposals in review"
+          value={pendingProposals.length}
+          hint={`${data.proposals.length} total proposals`}
+          tone={pendingProposals.length > 0 ? "warning" : "default"}
+        />
+        <StatCard
+          label="Active pilots"
+          value={activePilots.length}
+          hint={`${data.pilots.length} total pilots`}
+          tone="success"
+        />
+        <StatCard
+          label="Pilot spend (disbursed)"
+          value={formatInrCompact(totalSpent)}
+          hint={`${formatInrCompact(totalAllocated)} sanctioned`}
         />
       </div>
 
@@ -295,7 +312,7 @@ function OverviewTab({
 }) {
   const [selectedProposal, setSelectedProposal] = React.useState<Proposal | null>(null);
   const [sectorFilter, setSectorFilter] = React.useState<string>("all");
-  const [proposalSubFilter, setProposalSubFilter] = React.useState<"all" | "pending" | "shortlisted">("all");
+  const [proposalSubFilter, setProposalSubFilter] = React.useState<"all" | "under_review" | "shortlisted" | "rejected">("all");
 
   const challengeMap = React.useMemo(() => {
     const map: Record<string, Challenge> = {};
@@ -312,7 +329,7 @@ function OverviewTab({
     return Array.from(s);
   }, [data.challenges]);
 
-  const pendingProposals = React.useMemo(
+  const underReviewProposals = React.useMemo(
     () => data.proposals.filter((p) => ["submitted", "under_review", "draft"].includes(p.status)),
     [data.proposals]
   );
@@ -320,14 +337,20 @@ function OverviewTab({
     () => data.proposals.filter((p) => ["shortlisted", "piloting", "completed", "scaled"].includes(p.status)),
     [data.proposals]
   );
+  const rejectedProposals = React.useMemo(
+    () => data.proposals.filter((p) => p.status === "rejected"),
+    [data.proposals]
+  );
 
   // Filter proposals by subfilter and sector — guarantees list is never unexpectedly empty
   const displayedProposals = React.useMemo(() => {
     let list = data.proposals;
-    if (proposalSubFilter === "pending") {
-      list = pendingProposals.length > 0 ? pendingProposals : data.proposals;
+    if (proposalSubFilter === "under_review") {
+      list = underReviewProposals.length > 0 ? underReviewProposals : data.proposals;
     } else if (proposalSubFilter === "shortlisted") {
       list = shortlistedProposals.length > 0 ? shortlistedProposals : data.proposals;
+    } else if (proposalSubFilter === "rejected") {
+      list = rejectedProposals.length > 0 ? rejectedProposals : data.proposals;
     } else {
       list = data.proposals;
     }
@@ -343,7 +366,7 @@ function OverviewTab({
     }
 
     return list.length > 0 ? list : data.proposals;
-  }, [proposalSubFilter, sectorFilter, pendingProposals, shortlistedProposals, data.proposals, challengeMap]);
+  }, [proposalSubFilter, sectorFilter, underReviewProposals, shortlistedProposals, rejectedProposals, data.proposals, challengeMap]);
 
   const views = buildPilotViews(data);
   const atRisk = views.filter((v) => v.riskLevel === "high");
@@ -424,14 +447,14 @@ function OverviewTab({
                   All ({data.proposals.length})
                 </button>
                 <button
-                  onClick={() => setProposalSubFilter("pending")}
+                  onClick={() => setProposalSubFilter("under_review")}
                   className={`rounded px-2.5 py-1 text-xs font-semibold transition-colors ${
-                    proposalSubFilter === "pending"
+                    proposalSubFilter === "under_review"
                       ? "bg-blue-600 text-white shadow-2xs"
                       : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                   }`}
                 >
-                  Pending Triage ({pendingProposals.length})
+                  Under Review ({underReviewProposals.length})
                 </button>
                 <button
                   onClick={() => setProposalSubFilter("shortlisted")}
@@ -442,6 +465,16 @@ function OverviewTab({
                   }`}
                 >
                   Shortlisted ({shortlistedProposals.length})
+                </button>
+                <button
+                  onClick={() => setProposalSubFilter("rejected")}
+                  className={`rounded px-2.5 py-1 text-xs font-semibold transition-colors ${
+                    proposalSubFilter === "rejected"
+                      ? "bg-blue-600 text-white shadow-2xs"
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  }`}
+                >
+                  Rejected ({rejectedProposals.length})
                 </button>
               </div>
             </div>
@@ -520,11 +553,11 @@ function OverviewTab({
               >
                 <div className="flex items-center gap-2.5">
                   <span className="h-2 w-2 rounded-full bg-amber-500 ring-2 ring-amber-100" />
-                  <span className="font-semibold text-amber-950 group-hover:text-amber-900">Proposals awaiting triage</span>
+                  <span className="font-semibold text-amber-950 group-hover:text-amber-900">Proposals under review</span>
                 </div>
                 <div className="flex items-center gap-1.5 font-bold font-mono">
                   <span className="rounded bg-amber-200/80 px-2 py-0.5 text-amber-900 text-[11px]">
-                    {pendingProposals.length}
+                    {underReviewProposals.length}
                   </span>
                   <span className="text-amber-600 group-hover:translate-x-0.5 transition-transform">→</span>
                 </div>
@@ -837,12 +870,10 @@ function ChallengeDetail({ challenge, onClose }: { challenge: Challenge; onClose
 function ProposalsTab({ data, onRefresh }: { data: DashboardData; onRefresh: () => void }) {
   const [status, setStatus] = React.useState("all");
   const [open, setOpen] = React.useState<Proposal | null>(null);
-  const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
   const [pageSize, setPageSize] = React.useState<number>(10);
   const [currentPage, setCurrentPage] = React.useState<number>(1);
   const [sortField, setSortField] = React.useState<"sno" | "title" | "challenge" | "ask" | "score" | "status">("sno");
   const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("asc");
-  const [busyBatch, setBusyBatch] = React.useState(false);
 
   const challengeMap = React.useMemo(() => {
     const map: Record<string, Challenge> = {};
@@ -852,7 +883,14 @@ function ProposalsTab({ data, onRefresh }: { data: DashboardData; onRefresh: () 
 
   // Filter by status tab
   const filtered = React.useMemo(() => {
-    let list = status === "all" ? data.proposals : data.proposals.filter((p) => p.status === status);
+    let list = data.proposals;
+    if (status === "under_review") {
+      list = data.proposals.filter((p) => ["submitted", "under_review", "draft"].includes(p.status));
+    } else if (status === "shortlisted") {
+      list = data.proposals.filter((p) => ["shortlisted", "piloting", "completed", "scaled"].includes(p.status));
+    } else if (status === "rejected") {
+      list = data.proposals.filter((p) => p.status === "rejected");
+    }
 
     // Sort
     list = [...list].sort((a, b) => {
@@ -887,98 +925,46 @@ function ProposalsTab({ data, onRefresh }: { data: DashboardData; onRefresh: () 
     }
   }
 
-  function toggleSelect(id: string) {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }
-
-  function toggleAll() {
-    if (selectedIds.size === paginated.length && paginated.length > 0) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(paginated.map((p) => p.id)));
-    }
-  }
-
-  async function handleBatchAction(action: "shortlist" | "reject") {
-    if (selectedIds.size === 0) return;
-    setBusyBatch(true);
-    await batchProposalDecision(Array.from(selectedIds), action);
-    setSelectedIds(new Set());
-    setBusyBatch(false);
-    onRefresh();
-  }
-
   return (
     <div className="space-y-4">
       {/* Category / Status Filter Badges */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap gap-2">
-          {["all", "submitted", "under_review", "shortlisted", "rejected"].map((s) => (
-            <button
-              key={s}
-              onClick={() => {
-                setStatus(s);
-                setCurrentPage(1);
-                setSelectedIds(new Set());
-              }}
-              className={`rounded border px-3 py-1 text-xs font-semibold transition-colors ${
-                status === s
-                  ? "border-slate-900 bg-slate-900 text-white shadow-xs"
-                  : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
-              }`}
-            >
-              {s === "all" ? "All Proposals" : humanise(s)}
-              <span className="ml-1.5 font-mono text-[11px] opacity-80">
-                ({s === "all" ? data.proposals.length : data.proposals.filter((p) => p.status === s).length})
-              </span>
-            </button>
-          ))}
+          {["all", "under_review", "shortlisted", "rejected"].map((s) => {
+            const count =
+              s === "all"
+                ? data.proposals.length
+                : s === "under_review"
+                ? data.proposals.filter((p) => ["submitted", "under_review", "draft"].includes(p.status)).length
+                : s === "shortlisted"
+                ? data.proposals.filter((p) => ["shortlisted", "piloting", "completed", "scaled"].includes(p.status)).length
+                : data.proposals.filter((p) => p.status === "rejected").length;
+            const label = s === "all" ? "All Proposals" : s === "under_review" ? "Under Review" : humanise(s);
+            return (
+              <button
+                key={s}
+                onClick={() => {
+                  setStatus(s);
+                  setCurrentPage(1);
+                }}
+                className={`rounded border px-3 py-1 text-xs font-semibold transition-colors ${
+                  status === s
+                    ? "border-slate-900 bg-slate-900 text-white shadow-xs"
+                    : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                {label}
+                <span className="ml-1.5 font-mono text-[11px] opacity-80">({count})</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Floating / Top Batch Action Toolbar */}
-      {selectedIds.size > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-2 p-3 bg-blue-50 border border-blue-200 rounded text-xs shadow-xs animate-in fade-in">
-          <div className="flex items-center gap-2 font-bold text-blue-900 font-mono">
-            <span>✓ {selectedIds.size} proposal(s) selected</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              variant="success"
-              disabled={busyBatch}
-              onClick={() => handleBatchAction("shortlist")}
-            >
-              {busyBatch ? "Processing…" : `Batch Shortlist (${selectedIds.size})`}
-            </Button>
-            <Button
-              size="sm"
-              variant="danger"
-              disabled={busyBatch}
-              onClick={() => handleBatchAction("reject")}
-            >
-              {busyBatch ? "Processing…" : `Batch Reject (${selectedIds.size})`}
-            </Button>
-            <button
-              onClick={() => setSelectedIds(new Set())}
-              className="text-xs text-slate-500 hover:text-slate-800 underline ml-2 font-medium"
-            >
-              Clear selection
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Main DataTable Container (Styled like the reference image) */}
+      {/* Main DataTable Container */}
       <div className="border border-slate-300 bg-white shadow-xs rounded-none sm:rounded-xs overflow-hidden">
         {/* Top Control Bar: "Show entries" */}
         <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 border-b border-slate-200 bg-white text-xs text-slate-700">
-          {/* Show Entries Dropdown */}
           <div className="flex items-center gap-2 font-medium">
             <span>Show</span>
             <select
@@ -1003,15 +989,6 @@ function ProposalsTab({ data, onRefresh }: { data: DashboardData; onRefresh: () 
           <table className="w-full border-collapse text-left text-xs">
             <thead>
               <tr className="border-b-2 border-slate-300 bg-slate-50/75 text-slate-800 font-bold">
-                <th className="w-10 border-r border-slate-200 px-3 py-3 text-center">
-                  <input
-                    type="checkbox"
-                    checked={paginated.length > 0 && selectedIds.size === paginated.length}
-                    onChange={toggleAll}
-                    className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                    title="Select all on this page"
-                  />
-                </th>
                 <th
                   onClick={() => handleSort("sno")}
                   className="w-14 border-r border-slate-200 px-3 py-3 text-center cursor-pointer select-none hover:bg-slate-100/80"
@@ -1074,7 +1051,7 @@ function ProposalsTab({ data, onRefresh }: { data: DashboardData; onRefresh: () 
             <tbody className="divide-y divide-slate-200">
               {paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-8 text-center text-slate-500 font-medium">
+                  <td colSpan={7} className="px-4 py-8 text-center text-slate-500 font-medium">
                     No matching proposals found in the database.
                   </td>
                 </tr>
@@ -1082,24 +1059,12 @@ function ProposalsTab({ data, onRefresh }: { data: DashboardData; onRefresh: () 
                 paginated.map((p, idx) => {
                   const challenge = challengeMap[p.challenge_id];
                   const sno = (currentPage - 1) * pageSize + idx + 1;
-                  const isChecked = selectedIds.has(p.id);
                   return (
                     <tr
                       key={p.id}
-                      className={`transition-colors hover:bg-blue-50/40 cursor-pointer ${isChecked ? "bg-blue-50/60" : ""}`}
+                      className="transition-colors hover:bg-blue-50/40 cursor-pointer"
                       onClick={() => setOpen(p)}
                     >
-                      <td
-                        className="border-r border-slate-200 px-3 py-3.5 text-center"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          onChange={() => toggleSelect(p.id)}
-                          className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                        />
-                      </td>
                       <td className="border-r border-slate-200 px-3 py-3.5 text-center font-semibold text-slate-600 font-mono">
                         {sno}
                       </td>
@@ -1160,7 +1125,7 @@ function ProposalsTab({ data, onRefresh }: { data: DashboardData; onRefresh: () 
           </table>
         </div>
 
-        {/* Bottom Pagination Bar: "Showing X to Y of Z entries" and Page Buttons */}
+        {/* Bottom Pagination Bar */}
         <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 border-t border-slate-200 bg-slate-50/50 text-xs text-slate-600">
           <div>
             Showing <span className="font-semibold text-slate-900">{startEntry}</span> to{" "}
@@ -1245,7 +1210,7 @@ function ProposalRow({
         </div>
       </div>
 
-      {/* Main Content Grid (3 Columns matching the reference image) */}
+      {/* Main Content Grid */}
       <div className="p-4 grid grid-cols-1 md:grid-cols-12 gap-4 text-xs">
         {/* Column 1: Items & Solution Details */}
         <div className="md:col-span-5 space-y-1.5 border-b md:border-b-0 md:border-r border-slate-100 pb-3 md:pb-0 md:pr-4">
@@ -1318,51 +1283,15 @@ function ProposalRow({
 
 function ProposalActions({
   proposal,
-  onChanged,
   onOpenDetail,
 }: {
   proposal: Proposal;
-  onChanged: () => void;
+  onChanged?: () => void;
   onOpenDetail?: () => void;
 }) {
-  const [busy, setBusy] = React.useState(false);
-  const decidable = ["submitted", "under_review"].includes(proposal.status);
-
-  async function act(status: "shortlisted" | "rejected") {
-    setBusy(true);
-    await setProposalStatus(proposal.id, status);
-    setBusy(false);
-    onChanged();
-  }
-
   return (
-    <div className="flex items-center gap-2 flex-wrap">
-      {decidable && (
-        <>
-          <Button
-            size="sm"
-            variant="success"
-            disabled={busy}
-            onClick={(e) => {
-              e.stopPropagation();
-              act("shortlisted");
-            }}
-          >
-            Shortlist
-          </Button>
-          <Button
-            size="sm"
-            variant="danger"
-            disabled={busy}
-            onClick={(e) => {
-              e.stopPropagation();
-              act("rejected");
-            }}
-          >
-            Reject
-          </Button>
-        </>
-      )}
+    <div className="flex items-center gap-2">
+      <StatusBadge status={proposal.status} />
       {onOpenDetail && (
         <Button
           size="sm"
@@ -1372,10 +1301,9 @@ function ProposalActions({
             onOpenDetail();
           }}
         >
-          Details
+          Details →
         </Button>
       )}
-      {!decidable && !onOpenDetail && <StatusBadge status={proposal.status} />}
     </div>
   );
 }
@@ -1391,7 +1319,6 @@ function ProposalDetail({
 }) {
   const [assignOpen, setAssignOpen] = React.useState(false);
   const [pilotOpen, setPilotOpen] = React.useState(false);
-  const decidable = ["submitted", "under_review"].includes(proposal.status);
 
   return (
     <Dialog title={`${proposal.startup_name ?? proposal.title} · proposal`} onClose={onClose} width="max-w-3xl">
@@ -1420,9 +1347,9 @@ function ProposalDetail({
             <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
               <ScoreChip value={proposal.weighted_score} count={proposal.evaluations_count} />
               <span className="text-xs text-slate-500">
-                Recommendation:{" "}
-                <span className="font-medium">
-                  {proposal.panel_recommendation ? humanise(proposal.panel_recommendation) : "pending panel"}
+                Panel Recommendation:{" "}
+                <span className="font-semibold text-slate-800">
+                  {proposal.panel_recommendation ? humanise(proposal.panel_recommendation) : (proposal.status === "shortlisted" ? "Shortlisted by Panel" : proposal.status === "rejected" ? "Rejected by Panel" : "Under Expert Review")}
                 </span>
               </span>
             </div>
@@ -1430,41 +1357,43 @@ function ProposalDetail({
         </div>
 
         {proposal.status === "shortlisted" && (
-          <div className="flex flex-wrap gap-2 rounded-md bg-emerald-50 p-3 text-sm text-emerald-800">
-            <span>Shortlisted. Next steps:</span>
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-emerald-50 border border-emerald-200 p-3 text-sm text-emerald-900">
+            <div>
+              <span className="font-semibold">✓ Shortlisted by Evaluation Panel.</span>{" "}
+              <span className="text-xs text-emerald-700">Next step: Issue pilot work order.</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="outline" onClick={() => setAssignOpen(true)}>
+                Convene panel
+              </Button>
+              <Button size="sm" onClick={() => setPilotOpen(true)}>
+                Create pilot
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {proposal.status === "under_review" && (
+          <div className="rounded-md bg-amber-50 border border-amber-200 p-3 text-xs text-amber-900 flex items-center justify-between gap-2">
+            <div>
+              <span className="font-semibold">⏳ Under Expert Evaluation:</span> Proposal is currently being scored by independent domain experts.
+            </div>
             <Button size="sm" variant="outline" onClick={() => setAssignOpen(true)}>
-              Convene panel
-            </Button>
-            <Button size="sm" onClick={() => setPilotOpen(true)}>
-              Create pilot
+              Assign Experts
             </Button>
           </div>
         )}
 
+        {proposal.status === "rejected" && (
+          <div className="rounded-md bg-red-50 border border-red-200 p-3 text-xs text-red-800">
+            <span className="font-semibold">✕ Evaluation Outcome:</span> Proposal did not meet the consensus threshold during expert panel review.
+          </div>
+        )}
+
         <div className="flex justify-end gap-2 border-t border-slate-100 pt-3">
-          {decidable && (
-            <>
-              <Button
-                variant="danger"
-                onClick={async () => {
-                  await setProposalStatus(proposal.id, "rejected");
-                  onClose();
-                  onChanged();
-                }}
-              >
-                Reject
-              </Button>
-              <Button
-                variant="success"
-                onClick={async () => {
-                  await setProposalStatus(proposal.id, "shortlisted");
-                  onChanged();
-                }}
-              >
-                Shortlist
-              </Button>
-            </>
-          )}
+          <Button variant="outline" onClick={onClose}>
+            Close
+          </Button>
         </div>
       </div>
 

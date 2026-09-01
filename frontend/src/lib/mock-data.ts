@@ -1156,7 +1156,7 @@ export const proposals: Proposal[] = [
       { title: "Phase 2 deployment (60 schemes)", week: 11, deliverable: "Remaining 180 nodes commissioned, NABL correlation report", payment_percentage: 25 },
       { title: "Uptime validation & handover", week: 13, deliverable: "98% uptime evidence, AMC plan, dashboard handover to WSSD", payment_percentage: 20 },
     ],
-    status: "piloting",
+    status: "under_review",
     submission_notes:
       "Consumable cost capped at ₹1,150 per node per year. Data hosted on MeitY-empanelled cloud in Mumbai region.",
     created_at: "2026-05-16T10:10:00+05:30",
@@ -1188,9 +1188,9 @@ export const proposals: Proposal[] = [
       { title: "Optimiser rollout for 4 zones", week: 9, deliverable: "Optimised plans in production, driver app deployed", payment_percentage: 40 },
       { title: "Grievance loop & handover", week: 14, deliverable: "Helpline integration, fuel savings report", payment_percentage: 30 },
     ],
-    status: "submitted",
+    status: "rejected",
     submission_notes:
-      "DPIIT recognition is under renewal; certificate expiring 28 Feb 2026 was uploaded. Data and IP clauses not yet accepted — legal review requested by the startup.",
+      "DPIIT recognition expired and data IP clauses unaccepted. Rejected by evaluation panel due to statutory compliance failure.",
     created_at: "2026-08-22T16:45:00+05:30",
     updated_at: "2026-08-22T16:45:00+05:30",
   },
@@ -1221,7 +1221,7 @@ export const proposals: Proposal[] = [
       { title: "Units 5-8 commissioning", week: 17, deliverable: "45 TPD aggregate capacity, compost FCO test certificates", payment_percentage: 30 },
       { title: "Stabilisation & outcome validation", week: 24, deliverable: "60% landfill diversion evidence, 75% segregation compliance, O&M handover", payment_percentage: 30 },
     ],
-    status: "piloting",
+    status: "shortlisted",
     submission_notes:
       "Bio-gas offset credited against PMC street lighting cost. Compost offtake agreement with the Agriculture Department attached.",
     created_at: "2026-02-10T13:30:00+05:30",
@@ -1254,9 +1254,9 @@ export const proposals: Proposal[] = [
       { title: "Deployment across Dharashiv", week: 14, deliverable: "420 institutions live, escalation workflow validated", payment_percentage: 25 },
       { title: "Outcome validation & handover", week: 18, deliverable: "95% rectification evidence, uptime report, WSSD handover", payment_percentage: 25 },
     ],
-    status: "completed",
+    status: "shortlisted",
     submission_notes:
-      "Consumable cost of ₹980 per institution per year. Pilot completed and recommended for state-wide scale-up through GeM.",
+      "Consumable cost of ₹980 per institution per year. Shortlisted by panel for state-wide scale-up.",
     created_at: "2025-08-14T10:00:00+05:30",
     updated_at: "2026-06-30T17:45:00+05:30",
   },
@@ -1287,7 +1287,7 @@ export const proposals: Proposal[] = [
       { title: "Instrumentation of spans 13-24 & digital twins", week: 26, deliverable: "24 spans live, calibrated digital twins, BMS integration", payment_percentage: 35 },
       { title: "Early-warning validation & handover", week: 32, deliverable: "48-hour lead time back-test, false alert rate under 8%, training", payment_percentage: 25 },
     ],
-    status: "piloting",
+    status: "under_review",
     submission_notes:
       "Raw sensor data to be handed over in open format (HDF5 + CSV) at closure. Annual O&M quoted separately at ₹42 Lakh.",
     created_at: "2026-03-05T09:40:00+05:30",
@@ -1353,7 +1353,7 @@ export const proposals: Proposal[] = [
       { title: "City-wide rollout & grievance loop", week: 13, deliverable: "All zones live, helpline API integrated", payment_percentage: 30 },
       { title: "Fuel savings validation & handover", week: 16, deliverable: "15% fuel reduction evidence, ward officer training", payment_percentage: 20 },
     ],
-    status: "submitted",
+    status: "under_review",
     submission_notes:
       "Existing NMC vendor relationship declared for conflict screening. No fleet retrofit required.",
     created_at: "2026-08-20T11:50:00+05:30",
@@ -1386,9 +1386,9 @@ export const proposals: Proposal[] = [
       { title: "Phase 2 excavation (90,000 cum)", week: 24, deliverable: "100% volume processed, fines reused on site", payment_percentage: 30 },
       { title: "Land handover", week: 28, deliverable: "6 acres levelled and handed over, closure drone survey", payment_percentage: 20 },
     ],
-    status: "completed",
+    status: "rejected",
     submission_notes:
-      "Pilot closed April 2026. Volume target met; land reclamation fell short at 4.6 of 6 acres due to an unmapped leachate pond.",
+      "Low feasibility and fire risk concerns raised during independent expert panel evaluation.",
     created_at: "2025-07-02T10:20:00+05:30",
     updated_at: "2026-04-18T17:25:00+05:30",
   },

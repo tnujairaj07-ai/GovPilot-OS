@@ -368,10 +368,10 @@ export function StatCard({
   }[tone];
   return (
     <Card>
-      <CardContent className="p-5">
-        <p className="text-sm text-slate-500">{label}</p>
-        <p className={cn("mt-1 text-3xl font-semibold tracking-tight", toneClass)}>{value}</p>
-        {hint && <p className="mt-1 text-xs text-slate-400">{hint}</p>}
+      <CardContent className="p-4 sm:p-5">
+        <p className="text-xs sm:text-sm font-medium text-slate-500">{label}</p>
+        <p className={cn("mt-1 text-2xl sm:text-3xl font-semibold tracking-tight", toneClass)}>{value}</p>
+        {hint && <p className="mt-1 text-xs text-slate-400 font-medium">{hint}</p>}
       </CardContent>
     </Card>
   );

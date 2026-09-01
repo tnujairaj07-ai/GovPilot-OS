@@ -20,10 +20,10 @@ router.get('/dashboard', authenticate, authorize('government', 'admin'), (req, r
     const scaleDecisions = db.getAll('scale_decisions');
     const users = db.getAll('users');
 
-    // 1. KPI Counters
+    // 1. KPI Counters (computed dynamically from live database entities)
     const openChallenges = challenges.filter(c => c.status === 'open');
-    const pendingProposals = proposals.filter(p => ['submitted', 'under_review'].includes(p.status));
-    const activePilots = pilots.filter(p => ['active', 'in_pilot'].includes(p.status));
+    const pendingProposals = proposals.filter(p => ['submitted', 'under_review', 'draft'].includes(p.status));
+    const activePilots = pilots.filter(p => ['active', 'in_pilot', 'signed'].includes(p.status));
     const totalAllocated = pilots.reduce((sum, p) => sum + (Number(p.budget_allocated) || 0), 0);
     const totalDisbursed = pilots.reduce((sum, p) => sum + (Number(p.budget_spent) || 0), 0);
 
@@ -122,16 +122,22 @@ router.get('/dashboard', authenticate, authorize('government', 'admin'), (req, r
     res.json({
       summary: {
         open_challenges_count: openChallenges.length,
+        total_challenges_count: challenges.length,
         proposals_in_review_count: pendingProposals.length,
+        total_proposals_count: proposals.length,
         active_pilots_count: activePilots.length,
+        total_pilots_count: pilots.length,
         total_budget_sanctioned: totalAllocated,
         total_budget_disbursed: totalDisbursed,
         pilots_at_risk_count: pilotsAtRisk.length,
         scale_ready_count: scaleReadyPilots.length,
+        total_kpis_count: kpis.length,
+        total_snapshots_count: snapshots.length,
+        verified_snapshots_count: snapshots.filter(s => s.verified).length,
       },
       attention_required: {
         open_challenges: openChallenges,
-        proposals_in_triage: enrichedProposals.filter(p => ['submitted', 'under_review'].includes(p.status)),
+        proposals_in_triage: enrichedProposals.filter(p => ['submitted', 'under_review', 'draft'].includes(p.status)),
         pilots_at_risk: pilotsAtRisk,
         scale_up_ready: scaleReadyPilots,
       },

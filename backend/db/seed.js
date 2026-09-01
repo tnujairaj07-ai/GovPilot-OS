@@ -92,7 +92,7 @@ const proposals = [
     timeline_weeks: 10, budget_estimate: 85000,
     team_description: '3 ML engineers, 1 backend developer, 1 UX designer with government service experience.',
     past_projects: 'Deployed similar system for City of Portland, achieving 94% classification accuracy.',
-    status: 'submitted', created_at: '2025-03-10T16:00:00Z'
+    status: 'shortlisted', created_at: '2025-03-10T16:00:00Z'
   },
   {
     id: uuidv4(), challenge_id: challenges[0].id, startup_id: startupIds[1],
@@ -101,7 +101,7 @@ const proposals = [
     timeline_weeks: 6, budget_estimate: 45000,
     team_description: '2 full-stack developers, 1 NLP specialist.',
     past_projects: 'Built triage systems for 3 state agencies, reducing processing time by 55%.',
-    status: 'submitted', created_at: '2025-03-12T09:00:00Z'
+    status: 'under_review', created_at: '2025-03-12T09:00:00Z'
   },
   {
     id: uuidv4(), challenge_id: challenges[1].id, startup_id: startupIds[0],
@@ -110,7 +110,7 @@ const proposals = [
     timeline_weeks: 14, budget_estimate: 72000,
     team_description: 'IoT team (2 engineers), cloud platform team (3 engineers), data visualization specialist.',
     past_projects: 'Built similar platform for University campus, tracking 200+ buildings.',
-    status: 'submitted', created_at: '2025-03-15T10:00:00Z'
+    status: 'shortlisted', created_at: '2025-03-15T10:00:00Z'
   },
   {
     id: uuidv4(), challenge_id: challenges[2].id, startup_id: startupIds[1],
@@ -119,7 +119,7 @@ const proposals = [
     timeline_weeks: 22, budget_estimate: 180000,
     team_description: 'Blockchain architect, 2 Solidity developers, 2 backend engineers, 1 compliance specialist.',
     past_projects: 'Piloted blockchain voting system for local election in Estonia.',
-    status: 'submitted', created_at: '2025-03-08T14:00:00Z'
+    status: 'under_review', created_at: '2025-03-08T14:00:00Z'
   },
   {
     id: uuidv4(), challenge_id: challenges[2].id, startup_id: startupIds[2],
@@ -128,7 +128,7 @@ const proposals = [
     timeline_weeks: 20, budget_estimate: 150000,
     team_description: 'Cryptography expert, 3 blockchain developers, 1 government liaison.',
     past_projects: 'Implemented blockchain-based health records system in Rwanda.',
-    status: 'submitted', created_at: '2025-03-09T11:00:00Z'
+    status: 'rejected', created_at: '2025-03-09T11:00:00Z'
   }
 ];
 
