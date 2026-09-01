@@ -312,7 +312,6 @@ function OverviewTab({
 }) {
   const [selectedProposal, setSelectedProposal] = React.useState<Proposal | null>(null);
   const [sectorFilter, setSectorFilter] = React.useState<string>("all");
-  const [proposalSubFilter, setProposalSubFilter] = React.useState<"all" | "under_review" | "shortlisted" | "rejected">("all");
 
   const challengeMap = React.useMemo(() => {
     const map: Record<string, Challenge> = {};
@@ -342,18 +341,9 @@ function OverviewTab({
     [data.proposals]
   );
 
-  // Filter proposals by subfilter and sector — guarantees list is never unexpectedly empty
+  // Filter proposals by sector — guarantees list is never unexpectedly empty
   const displayedProposals = React.useMemo(() => {
     let list = data.proposals;
-    if (proposalSubFilter === "under_review") {
-      list = underReviewProposals.length > 0 ? underReviewProposals : data.proposals;
-    } else if (proposalSubFilter === "shortlisted") {
-      list = shortlistedProposals.length > 0 ? shortlistedProposals : data.proposals;
-    } else if (proposalSubFilter === "rejected") {
-      list = rejectedProposals.length > 0 ? rejectedProposals : data.proposals;
-    } else {
-      list = data.proposals;
-    }
 
     if (sectorFilter !== "all") {
       const sectorFiltered = list.filter((p) => {
@@ -366,7 +356,7 @@ function OverviewTab({
     }
 
     return list.length > 0 ? list : data.proposals;
-  }, [proposalSubFilter, sectorFilter, underReviewProposals, shortlistedProposals, rejectedProposals, data.proposals, challengeMap]);
+  }, [sectorFilter, data.proposals, challengeMap]);
 
   const views = buildPilotViews(data);
   const atRisk = views.filter((v) => v.riskLevel === "high");
@@ -432,50 +422,6 @@ function OverviewTab({
                 <span className="font-mono text-xs font-bold text-slate-500">
                   ({displayedProposals.length})
                 </span>
-              </div>
-
-              {/* Sub-filter pill buttons */}
-              <div className="flex items-center gap-1.5 text-xs">
-                <button
-                  onClick={() => setProposalSubFilter("all")}
-                  className={`rounded px-2.5 py-1 text-xs font-semibold transition-colors ${
-                    proposalSubFilter === "all"
-                      ? "bg-blue-600 text-white shadow-2xs"
-                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                  }`}
-                >
-                  All ({data.proposals.length})
-                </button>
-                <button
-                  onClick={() => setProposalSubFilter("under_review")}
-                  className={`rounded px-2.5 py-1 text-xs font-semibold transition-colors ${
-                    proposalSubFilter === "under_review"
-                      ? "bg-blue-600 text-white shadow-2xs"
-                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                  }`}
-                >
-                  Under Review ({underReviewProposals.length})
-                </button>
-                <button
-                  onClick={() => setProposalSubFilter("shortlisted")}
-                  className={`rounded px-2.5 py-1 text-xs font-semibold transition-colors ${
-                    proposalSubFilter === "shortlisted"
-                      ? "bg-blue-600 text-white shadow-2xs"
-                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                  }`}
-                >
-                  Shortlisted ({shortlistedProposals.length})
-                </button>
-                <button
-                  onClick={() => setProposalSubFilter("rejected")}
-                  className={`rounded px-2.5 py-1 text-xs font-semibold transition-colors ${
-                    proposalSubFilter === "rejected"
-                      ? "bg-blue-600 text-white shadow-2xs"
-                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                  }`}
-                >
-                  Rejected ({rejectedProposals.length})
-                </button>
               </div>
             </div>
 
