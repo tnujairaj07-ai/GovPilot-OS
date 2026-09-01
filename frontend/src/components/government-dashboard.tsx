@@ -311,21 +311,11 @@ function OverviewTab({
   onRefresh: () => void;
 }) {
   const [selectedProposal, setSelectedProposal] = React.useState<Proposal | null>(null);
-  const [sectorFilter, setSectorFilter] = React.useState<string>("all");
 
   const challengeMap = React.useMemo(() => {
     const map: Record<string, Challenge> = {};
     for (const c of data.challenges) map[c.id] = c;
     return map;
-  }, [data.challenges]);
-
-  // Sector list derived from challenges
-  const sectors = React.useMemo(() => {
-    const s = new Set<string>();
-    data.challenges.forEach((c) => {
-      if (c.sector) s.add(c.sector);
-    });
-    return Array.from(s);
   }, [data.challenges]);
 
   const underReviewProposals = React.useMemo(
@@ -341,22 +331,7 @@ function OverviewTab({
     [data.proposals]
   );
 
-  // Filter proposals by sector — guarantees list is never unexpectedly empty
-  const displayedProposals = React.useMemo(() => {
-    let list = data.proposals;
-
-    if (sectorFilter !== "all") {
-      const sectorFiltered = list.filter((p) => {
-        const ch = challengeMap[p.challenge_id];
-        return ch?.sector === sectorFilter;
-      });
-      if (sectorFiltered.length > 0) {
-        list = sectorFiltered;
-      }
-    }
-
-    return list.length > 0 ? list : data.proposals;
-  }, [sectorFilter, data.proposals, challengeMap]);
+  const displayedProposals = data.proposals;
 
   const views = buildPilotViews(data);
   const atRisk = views.filter((v) => v.riskLevel === "high");
@@ -364,67 +339,14 @@ function OverviewTab({
 
   return (
     <div className="space-y-4">
-      {/* ===================================================================== */}
-      {/* TOP HORIZONTAL SECTOR FILTER STRIP                                    */}
-      {/* ===================================================================== */}
-      <div className="flex flex-wrap items-center justify-between gap-2.5 rounded border border-slate-200 bg-white p-2.5 shadow-2xs">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Sector:</span>
-          <div className="flex flex-wrap items-center gap-1.5">
-            <button
-              onClick={() => setSectorFilter("all")}
-              className={`rounded px-2.5 py-1 text-xs font-semibold transition-colors ${
-                sectorFilter === "all"
-                  ? "bg-slate-900 text-white shadow-2xs"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              }`}
-            >
-              All Sectors ({data.challenges.length})
-            </button>
-            {sectors.map((sec) => {
-              const count = data.challenges.filter((c) => c.sector === sec).length;
-              return (
-                <button
-                  key={sec}
-                  onClick={() => setSectorFilter(sec)}
-                  className={`rounded px-2.5 py-1 text-xs font-semibold transition-colors ${
-                    sectorFilter === sec
-                      ? "bg-blue-600 text-white shadow-2xs"
-                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                  }`}
-                >
-                  {sec} ({count})
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="text-[11px] text-slate-500 font-medium">
-          Filter proposals by sector
-        </div>
-      </div>
-
       {/* Main Grid: 2 Columns for Proposals, 1 Column for Attention Required */}
       <div className="grid gap-6 lg:grid-cols-3 items-start">
         {/* Main Left Content Stream (Cols 1-2) */}
         <div className="lg:col-span-2 space-y-6">
           {/* =================================================================== */}
-          {/* PROPOSALS AWAITING DECISION (SCROLLABLE 2-COLUMN WINDOW)            */}
+          {/* PROPOSALS LIST (SCROLLABLE 2-COLUMN WINDOW)                        */}
           {/* =================================================================== */}
           <div className="space-y-2.5">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-2">
-              <div className="flex items-center gap-2">
-                <span className="flex h-5 w-5 items-center justify-center rounded bg-blue-100 text-blue-800 text-xs font-bold">
-                  📑
-                </span>
-                <SectionLabel>Proposals awaiting your decision</SectionLabel>
-                <span className="font-mono text-xs font-bold text-slate-500">
-                  ({displayedProposals.length})
-                </span>
-              </div>
-            </div>
-
             {/* Scrollable Window for Proposals (2 Columns matching user sketch) */}
             <div className="rounded border-2 border-slate-300 bg-slate-100/60 p-3 shadow-inner">
               {displayedProposals.length === 0 ? (
@@ -579,8 +501,6 @@ function OverviewTab({
 
 function ChallengesTab({ data, onRefresh }: { data: DashboardData; onRefresh: () => void }) {
   const [open, setOpen] = React.useState<Challenge | null>(null);
-  const [sectorFilter, setSectorFilter] = React.useState<string>("all");
-  const [statusFilter, setStatusFilter] = React.useState<string>("all");
 
   const proposalCountByChallenge = React.useMemo(() => {
     const map: Record<string, number> = {};
@@ -588,56 +508,10 @@ function ChallengesTab({ data, onRefresh }: { data: DashboardData; onRefresh: ()
     return map;
   }, [data.proposals]);
 
-  const filteredChallenges = React.useMemo(() => {
-    return data.challenges.filter((c) => {
-      if (sectorFilter !== "all" && c.sector !== sectorFilter) return false;
-      if (statusFilter !== "all" && c.status !== statusFilter) return false;
-      return true;
-    });
-  }, [data.challenges, sectorFilter, statusFilter]);
-
-  const sectors = ["all", "PWD", "Urban Waste", "Water Quality"];
+  const filteredChallenges = data.challenges;
 
   return (
     <div className="space-y-4">
-      {/* Top Filter Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border border-slate-200 bg-white p-3 rounded shadow-xs">
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-xs font-semibold text-slate-500 mr-1">Sector:</span>
-          {sectors.map((s) => (
-            <button
-              key={s}
-              onClick={() => setSectorFilter(s)}
-              className={`rounded border px-2.5 py-1 text-xs font-semibold transition-colors ${
-                sectorFilter === s
-                  ? "border-blue-600 bg-blue-600 text-white shadow-xs"
-                  : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
-              }`}
-            >
-              {s === "all" ? "All Sectors" : s}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex items-center gap-2 text-xs">
-          <span className="text-slate-500 font-medium">Status:</span>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="rounded border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold text-slate-800 focus:border-blue-600 focus:outline-hidden"
-          >
-            <option value="all">All Statuses</option>
-            <option value="open">Open for Proposals</option>
-            <option value="in_review">In Review</option>
-            <option value="piloting">Piloting</option>
-            <option value="closed">Closed</option>
-          </select>
-          <span className="text-sky-800 font-bold ml-1 font-mono">
-            ({filteredChallenges.length} challenges)
-          </span>
-        </div>
-      </div>
-
       {/* Grid of GeM/e-Tender Styled Challenge Cards */}
       {filteredChallenges.length === 0 ? (
         <Card className="p-8 text-center bg-white border border-slate-200">
